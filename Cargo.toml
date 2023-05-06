@@ -1,5 +1,23 @@
-[workspace]
-members = [
-    "sentencepiece",
-    "sentencepiece-sys",
-]
+[package]
+name = "sentencepiece_ffi"
+version = "0.11.1"
+authors = ["Daniël de Kok <me@danieldk.eu>"]
+edition = "2018"
+description = "Binding for the sentencepiece tokenizer"
+repository = "https://github.com/danieldk/sentencepiece.git"
+license = "Apache-2.0"
+#exclude = ["source/data", "source/doc", "source/python", "source/tensorflow"]
+
+[build-dependencies]
+#cc = "1"
+cc = { path = "../cc" }
+#cmake = "0.1"
+cmake = { path = "../cmake" }
+#pkg-config = "0.3"
+
+[dependencies]
+libc = { path = "../libc" }
+
+#[features]
+#system = []
+#static = []
