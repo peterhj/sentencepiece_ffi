@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <ext/malloc_allocator.h>
 
 #include <sentencepiece_processor.h>
 
@@ -36,21 +35,6 @@ int sentencepiece_processor_from_serialized_proto(SentencePieceProcessor *senten
   auto status = sentencepiece_processor->LoadFromSerializedProto(string_view(data, len));
   return to_underlying_type(status.code());
 }
-
-/*int sentencepiece_processor_load(SentencePieceProcessor *sentencepiece_processor, char const *filename) {
-  auto status = sentencepiece_processor->Load(filename);
-  return to_underlying_type(status.code());
-}*/
-
-/*unsigned char *sentencepiece_processor_to_serialized_proto(SentencePieceProcessor *sentencepiece_processor, size_t *len) {
-  auto serialized = sentencepiece_processor->serialized_model_proto();
-
-  *len = serialized.size();
-  unsigned char *data = (unsigned char *) malloc(serialized.size());
-  memcpy(data, serialized.data(), serialized.size());
-
-  return data;
-}*/
 
 int sentencepiece_processor_unk_id(SentencePieceProcessor *sentencepiece_processor) {
   return sentencepiece_processor->unk_id();
@@ -104,24 +88,6 @@ int sentencepiece_processor_decode(SentencePieceProcessor *sentencepiece_process
     return to_underlying_type(status.code());
 }
 
-/*int sentencepiece_processor_decode_pieces(SentencePieceProcessor *sentencepiece_processor, char const * const *pieces, size_t pieces_len, unsigned char **decoded, size_t *decoded_len) {
-    std::vector<absl::string_view> str_pieces;
-    str_pieces.reserve(pieces_len);
-  
-    for (char const * const *piece = pieces; piece != pieces + pieces_len; ++piece) {
-        str_pieces.push_back(*piece);
-    }
-
-    std::string decoded_string;
-    auto status = sentencepiece_processor->Decode(str_pieces, &decoded_string);
-
-    *decoded_len = decoded_string.size();
-    *decoded = (unsigned char *)malloc(decoded_string.size());
-    memcpy(*decoded, decoded_string.data(), decoded_string.size());
-
-    return to_underlying_type(status.code());
-}*/
-
 void sentencepiece_processor_encode(SentencePieceProcessor *sentencepiece_processor, char const *sentence, size_t sentence_len, int **encoded, size_t *encoded_len) {
   auto sentence_view = absl::string_view(sentence, sentence_len);
   std::vector<int/*, __gnu_cxx::malloc_allocator<int>*/> ids = sentencepiece_processor->EncodeAsIds(sentence_view);
@@ -133,27 +99,5 @@ void sentencepiece_processor_encode(SentencePieceProcessor *sentencepiece_proces
 
   return;
 }
-
-/*unsigned char *sentencepiece_processor_encode_as_serialized_proto(SentencePieceProcessor *sentencepiece_processor, char const *sentence, size_t sentence_len, size_t *len) {
-  auto sentence_view = absl::string_view(sentence, sentence_len);
-  auto serialized = sentencepiece_processor->EncodeAsSerializedProto(sentence_view);
-
-  *len = serialized.size();
-  unsigned char *data = (unsigned char *) malloc(serialized.size());
-  memcpy(data, serialized.data(), serialized.size());
-
-  return data;
-}
-
-unsigned char *sentencepiece_processor_sample_encode_as_serialized_proto(SentencePieceProcessor *sentencepiece_processor, char const *sentence, size_t sentence_len, size_t *len, size_t nbest, float alpha) {
-  auto sentence_view = absl::string_view(sentence, sentence_len);
-  auto serialized = sentencepiece_processor->SampleEncodeAsSerializedProto(sentence_view, static_cast<int>(nbest), alpha);
-
-  *len = serialized.size();
-  unsigned char *data = (unsigned char *) malloc(serialized.size());
-  memcpy(data, serialized.data(), serialized.size());
-
-  return data;
-}*/
 
 } // extern "C"

@@ -1,6 +1,6 @@
 extern crate libc;
 
-use ffi::{
+use crate::ffi::{
     SentencePieceProcessor as CSentencePieceProcessor,
     sentencepiece_processor_new,
     sentencepiece_processor_free,
@@ -18,12 +18,8 @@ use ffi::{
 };
 
 use libc::{c_char, c_int};
-//use num_derive::FromPrimitive;
-//use num_traits::{FromPrimitive, Signed};
-//use thiserror::Error;
 
 use std::ffi::{c_void, CString};
-//use std::os::unix::ffi::OsStrExt;
 
 pub mod ffi;
 
@@ -35,43 +31,6 @@ pub enum SentencePieceError {
     Decode(c_int),
     Encode,
 }
-
-/*/// Errors that returned by the `sentencepiece` library.
-#[derive(Clone, Copy, PartialEq, Eq, Debugr)]
-pub enum CSentencePieceError {
-    #[error("Cancelled")]
-    Cancelled = 1,
-    #[error("Unknown")]
-    Unknown = 2,
-    #[error("Invalid argument")]
-    InvalidArgument = 3,
-    #[error("Deadline exceeded")]
-    DeadlineExceeded = 4,
-    #[error("Not found")]
-    NotFound = 5,
-    #[error("Already exists")]
-    AlreadyExists = 6,
-    #[error("Permission denied")]
-    PermissionDenied = 7,
-    #[error("Unauthenticated")]
-    Unauthenticated = 16,
-    #[error("Resource exhausted")]
-    ResourceExhausted = 8,
-    #[error("Failed precondition")]
-    FailedPrecondition = 9,
-    #[error("Aborted")]
-    Aborted = 10,
-    #[error("Out of range")]
-    OutOfRange = 11,
-    #[error("Unimplemented")]
-    Unimplemented = 12,
-    #[error("Internal error")]
-    Internal = 13,
-    #[error("Unavailable")]
-    Unavailable = 14,
-    #[error("Data loss")]
-    DataLoss = 15,
-}*/
 
 pub struct CBuf<T> {
     ptr: *const T,

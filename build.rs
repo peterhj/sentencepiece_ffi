@@ -19,8 +19,10 @@ fn main() {
         .file("sentencepiece_wrap.cc")
         .cpp(true)
         .flag_if_supported("-std=c++17")
+        .opt_level(2)
         .pic(true)
         .compile("sentencepiece_wrap");
     println!("cargo:rerun-if-changed=sentencepiece_wrap.cc");
     //println!("cargo:rerun-if-changed=sentencepiece_wrap.h");
+    println!("cargo:rerun-if-changed=build.rs");
 }
