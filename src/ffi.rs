@@ -15,6 +15,15 @@ extern "C" {
         decoded_len: *mut usize,
     ) -> ::std::os::raw::c_int;
 }
+extern "C" {
+    pub fn sentencepiece_processor_decode16(
+        spp: *mut SentencePieceProcessor,
+        pieces: *const u16,
+        pieces_len: usize,
+        decoded: *mut *mut ::std::os::raw::c_char,
+        decoded_len: *mut usize,
+    ) -> ::std::os::raw::c_int;
+}
 /*extern "C" {
     pub fn sentencepiece_processor_decode_pieces(
         spp: *mut SentencePieceProcessor,
@@ -30,6 +39,15 @@ extern "C" {
         sentence: *const ::std::os::raw::c_char,
         sentence_len: usize,
         encoded: *mut *mut ::std::os::raw::c_int,
+        encoded_len: *mut usize,
+    );
+}
+extern "C" {
+    pub fn sentencepiece_processor_encode16(
+        spp: *mut SentencePieceProcessor,
+        sentence: *const ::std::os::raw::c_char,
+        sentence_len: usize,
+        encoded: *mut *mut u16,
         encoded_len: *mut usize,
     );
 }

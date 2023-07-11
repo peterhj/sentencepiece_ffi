@@ -14,17 +14,24 @@ use crate::ffi::{
     sentencepiece_processor_id_to_piece,
     sentencepiece_processor_piece_to_id,
     sentencepiece_processor_decode,
+    sentencepiece_processor_decode16,
     sentencepiece_processor_encode,
+    sentencepiece_processor_encode16,
 };
 
 use libc::{c_char, c_int};
 
 use std::ffi::{c_void, CString};
+use std::fs::{File};
+use std::io::{Read};
+use std::path::{Path};
 
 pub mod ffi;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SentencePieceError {
+    File,
+    IO,
     New,
     Proto(c_int),
     Utf8,
@@ -32,9 +39,10 @@ pub enum SentencePieceError {
     Encode,
 }
 
+#[repr(C)]
 pub struct CBuf<T> {
-    ptr: *const T,
-    len: usize,
+    pub ptr: *const T,
+    pub len: usize,
 }
 
 impl<T> Drop for CBuf<T> {
@@ -47,6 +55,14 @@ impl<T> Drop for CBuf<T> {
 impl<T> CBuf<T> {
     pub fn as_ref(&self) -> &[T] {
         unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+    }
+
+    pub fn as_ptr(&self) -> *const T {
+        self.ptr
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
     }
 }
 
@@ -67,6 +83,15 @@ impl Drop for SentencePieceProcessor {
 }
 
 impl SentencePieceProcessor {
+    pub fn from_dir<P: AsRef<Path>>(path: P) -> Result<Self, SentencePieceError> {
+        let mut path = path.as_ref().to_owned();
+        path.push("tokenizer.model");
+        let mut f = File::open(&path).map_err(|_| SentencePieceError::File)?;
+        let mut data = Vec::new();
+        f.read_to_end(&mut data).map_err(|_| SentencePieceError::IO)?;
+        SentencePieceProcessor::from_model(&data)
+    }
+
     pub fn from_model(data: &[u8]) -> Result<Self, SentencePieceError> {
         let inner = unsafe { sentencepiece_processor_new() };
         if inner.is_null() {
@@ -160,7 +185,7 @@ impl SentencePieceProcessor {
 
     /// Decode a sentence from piece identifiers.
     pub fn decode(&self, pieces: &[c_int]) -> Result<CBuf<u8>, SentencePieceError> {
-        let mut decoded: *mut i8 = std::ptr::null_mut();
+        let mut decoded: *mut c_char = std::ptr::null_mut();
         let mut decoded_len: usize = 0;
         let status = unsafe {
             sentencepiece_processor_decode(
@@ -188,12 +213,52 @@ impl SentencePieceProcessor {
         Ok(c_buf)
     }
 
+    pub fn decode16(&self, pieces: &[u16]) -> Result<CBuf<u8>, SentencePieceError> {
+        let mut decoded: *mut c_char = std::ptr::null_mut();
+        let mut decoded_len: usize = 0;
+        let status = unsafe {
+            sentencepiece_processor_decode16(
+                self.inner,
+                pieces.as_ptr(),
+                pieces.len(),
+                &mut decoded,
+                &mut decoded_len,
+            )
+        };
+        if decoded.is_null() {
+            return Err(SentencePieceError::Decode(status));
+        }
+        let c_buf = CBuf{ptr: decoded as *const u8, len: decoded_len};
+        if status != 0 {
+            return Err(SentencePieceError::Decode(status));
+        }
+        Ok(c_buf)
+    }
+
     /// Encode a sentence as sentence pieces and their identifiers.
     pub fn encode(&self, sentence: &str) -> Result<CBuf<c_int>, SentencePieceError> {
         let mut encoded: *mut c_int = std::ptr::null_mut();
         let mut encoded_len: usize = 0;
         unsafe {
             sentencepiece_processor_encode(
+                self.inner,
+                sentence.as_ptr() as *const c_char,
+                sentence.as_bytes().len(),
+                &mut encoded,
+                &mut encoded_len,
+            );
+        }
+        if encoded.is_null() {
+            return Err(SentencePieceError::Encode);
+        }
+        Ok(CBuf{ptr: encoded, len: encoded_len})
+    }
+
+    pub fn encode16(&self, sentence: &str) -> Result<CBuf<u16>, SentencePieceError> {
+        let mut encoded: *mut u16 = std::ptr::null_mut();
+        let mut encoded_len: usize = 0;
+        unsafe {
+            sentencepiece_processor_encode16(
                 self.inner,
                 sentence.as_ptr() as *const c_char,
                 sentence.as_bytes().len(),

@@ -2,7 +2,10 @@ extern crate cc;
 extern crate cmake;
 
 fn build_sentencepiece(builder: &mut cc::Build) {
-    let dst = cmake::Config::new("sentencepiece").pic(true).build();
+    let dst = cmake::Config::new("sentencepiece")
+        .profile("RelWithDebInfo")
+        .pic(true)
+        .build();
     println!(
         "cargo:rustc-link-search=native={}",
         //dst.join("build").join("src").display()
@@ -19,6 +22,7 @@ fn main() {
         .file("sentencepiece_wrap.cc")
         .cpp(true)
         .flag_if_supported("-std=c++17")
+        .debug(true)
         .opt_level(2)
         .pic(true)
         .compile("sentencepiece_wrap");
