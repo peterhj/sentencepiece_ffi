@@ -8,8 +8,11 @@ fn build_sentencepiece(builder: &mut cc::Build) {
         .build();
     println!(
         "cargo:rustc-link-search=native={}",
-        //dst.join("build").join("src").display()
         dst.join("lib64").display()
+    );
+    println!(
+        "cargo:rustc-link-search=native={}",
+        dst.join("lib").display()
     );
     println!("cargo:rustc-link-lib=static=sentencepiece");
     builder.include("sentencepiece/src");
@@ -27,6 +30,5 @@ fn main() {
         .pic(true)
         .compile("sentencepiece_wrap");
     println!("cargo:rerun-if-changed=sentencepiece_wrap.cc");
-    //println!("cargo:rerun-if-changed=sentencepiece_wrap.h");
     println!("cargo:rerun-if-changed=build.rs");
 }
