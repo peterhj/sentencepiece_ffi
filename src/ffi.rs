@@ -51,6 +51,37 @@ extern "C" {
         encoded_len: *mut usize,
     );
 }
+extern "C" {
+    pub fn sentencepiece_processor_encode16_with_suffix(
+        spp: *mut SentencePieceProcessor,
+        sentence: *const ::std::os::raw::c_char,
+        sentence_len: usize,
+        suffix_tok: u16,
+        encoded: *mut *mut u16,
+        encoded_len: *mut usize,
+    );
+}
+extern "C" {
+    pub fn sentencepiece_processor_encode16_with_prefix(
+        spp: *mut SentencePieceProcessor,
+        sentence: *const ::std::os::raw::c_char,
+        sentence_len: usize,
+        prefix_tok: u16,
+        encoded: *mut *mut u16,
+        encoded_len: *mut usize,
+    );
+}
+extern "C" {
+    pub fn sentencepiece_processor_encode16_with_prefix_suffix(
+        spp: *mut SentencePieceProcessor,
+        sentence: *const ::std::os::raw::c_char,
+        sentence_len: usize,
+        prefix_tok: u16,
+        suffix_tok: u16,
+        encoded: *mut *mut u16,
+        encoded_len: *mut usize,
+    );
+}
 /*extern "C" {
     pub fn sentencepiece_processor_encode_as_serialized_proto(
         spp: *mut SentencePieceProcessor,

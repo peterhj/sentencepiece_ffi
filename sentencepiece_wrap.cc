@@ -140,4 +140,65 @@ void sentencepiece_processor_encode16(SentencePieceProcessor *sentencepiece_proc
   return;
 }
 
+void sentencepiece_processor_encode16_with_suffix(SentencePieceProcessor *sentencepiece_processor, char const *sentence, size_t sentence_len, uint16_t suffix_tok, uint16_t **encoded, size_t *encoded_len) {
+  auto sentence_view = absl::string_view(sentence, sentence_len);
+  std::vector<int> ids = sentencepiece_processor->EncodeAsIds(sentence_view);
+
+  size_t len = ids.size();
+  *encoded_len = len + 1;
+
+  uint16_t *buf = (uint16_t *)malloc(sizeof(uint16_t) * (len + 1));
+  *encoded = buf;
+
+  uint16_t *dst = buf;
+  for (const auto &id : ids) {
+    *(dst++) = static_cast<uint16_t>(id);
+  }
+  *(dst++) = suffix_tok;
+  assert(dst == buf + len + 1);
+
+  return;
+}
+
+void sentencepiece_processor_encode16_with_prefix(SentencePieceProcessor *sentencepiece_processor, char const *sentence, size_t sentence_len, uint16_t prefix_tok, uint16_t **encoded, size_t *encoded_len) {
+  auto sentence_view = absl::string_view(sentence, sentence_len);
+  std::vector<int> ids = sentencepiece_processor->EncodeAsIds(sentence_view);
+
+  size_t len = ids.size();
+  *encoded_len = len + 1;
+
+  uint16_t *buf = (uint16_t *)malloc(sizeof(uint16_t) * (len + 1));
+  *encoded = buf;
+
+  uint16_t *dst = buf;
+  *(dst++) = prefix_tok;
+  for (const auto &id : ids) {
+    *(dst++) = static_cast<uint16_t>(id);
+  }
+  assert(dst == buf + len + 1);
+
+  return;
+}
+
+void sentencepiece_processor_encode16_with_prefix_suffix(SentencePieceProcessor *sentencepiece_processor, char const *sentence, size_t sentence_len, uint16_t prefix_tok, uint16_t suffix_tok, uint16_t **encoded, size_t *encoded_len) {
+  auto sentence_view = absl::string_view(sentence, sentence_len);
+  std::vector<int> ids = sentencepiece_processor->EncodeAsIds(sentence_view);
+
+  size_t len = ids.size();
+  *encoded_len = len + 2;
+
+  uint16_t *buf = (uint16_t *)malloc(sizeof(uint16_t) * (len + 2));
+  *encoded = buf;
+
+  uint16_t *dst = buf;
+  *(dst++) = prefix_tok;
+  for (const auto &id : ids) {
+    *(dst++) = static_cast<uint16_t>(id);
+  }
+  *(dst++) = suffix_tok;
+  assert(dst == buf + len + 2);
+
+  return;
+}
+
 } // extern "C"
