@@ -1,4 +1,5 @@
 extern crate libc;
+extern crate smol_str;
 
 use crate::ffi::{
     SentencePieceProcessor as CSentencePieceProcessor,
@@ -23,6 +24,7 @@ use crate::ffi::{
 };
 
 use libc::{c_char, c_int};
+use smol_str::{SmolStr};
 
 use std::ffi::{c_void, CString};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
@@ -30,6 +32,7 @@ use std::fs::{File};
 use std::io::{Read};
 use std::ops::{Deref};
 use std::path::{Path};
+use std::str::{from_utf8};
 
 pub mod ffi;
 
@@ -141,6 +144,12 @@ impl SentencePieceProcessor {
         unk_id
     }
 
+    pub fn unk_tok16(&self) -> u16 {
+        let t = self.unk_id();
+        assert!(t >= 0 && t <= u16::max_value() as _);
+        t as _
+    }
+
     pub fn bos_id(&self) -> Option<c_int> {
         let bos_id = unsafe { sentencepiece_processor_bos_id(self.inner) };
         if bos_id < 0 {
@@ -148,6 +157,12 @@ impl SentencePieceProcessor {
         } else {
             Some(bos_id)
         }
+    }
+
+    pub fn bos_tok16(&self) -> Option<u16> {
+        let t = self.bos_id()?;
+        assert!(t >= 0 && t <= u16::max_value() as _);
+        Some(t as _)
     }
 
     pub fn eos_id(&self) -> Option<c_int> {
@@ -159,6 +174,12 @@ impl SentencePieceProcessor {
         }
     }
 
+    pub fn eos_tok16(&self) -> Option<u16> {
+        let t = self.eos_id()?;
+        assert!(t >= 0 && t <= u16::max_value() as _);
+        Some(t as _)
+    }
+
     pub fn pad_id(&self) -> Option<c_int> {
         let pad_id = unsafe { sentencepiece_processor_pad_id(self.inner) };
         if pad_id < 0 {
@@ -166,6 +187,12 @@ impl SentencePieceProcessor {
         } else {
             Some(pad_id)
         }
+    }
+
+    pub fn pad_tok16(&self) -> Option<u16> {
+        let t = self.pad_id()?;
+        assert!(t >= 0 && t <= u16::max_value() as _);
+        Some(t as _)
     }
 
     pub fn is_unknown_id(&self, piece_id: c_int) -> bool {
@@ -181,8 +208,12 @@ impl SentencePieceProcessor {
         }
     }
 
-    pub fn id_to_piece(&self, piece_id: c_int) -> Result<String, SentencePieceError> {
-        let mut piece_ptr: *const i8 = std::ptr::null();
+    pub fn vocab_len(&self) -> Option<usize> {
+        Some(self.num_pieces()? as _)
+    }
+
+    pub fn id_to_piece<'this>(&'this self, piece_id: c_int) -> Result<SmolStr, SentencePieceError> {
+        let mut piece_ptr: *const c_char = std::ptr::null();
         let mut piece_len: usize = 0;
         unsafe { sentencepiece_processor_id_to_piece(
             self.inner,
@@ -192,8 +223,13 @@ impl SentencePieceProcessor {
         ) };
         assert!(!piece_ptr.is_null());
         // NB: the piece is a borrowed const char str.
-        let piece_buf = unsafe { std::slice::from_raw_parts(piece_ptr as *const u8, piece_len) };
-        String::from_utf8(piece_buf.to_owned()).map_err(|_| SentencePieceError::Utf8)
+        let piece_buf: &'this [u8] = unsafe { std::slice::from_raw_parts(piece_ptr as *const u8, piece_len) };
+        let piece_str = from_utf8(piece_buf).map_err(|_| SentencePieceError::Utf8)?;
+        Ok(piece_str.into())
+    }
+
+    pub fn get16(&self, tok: u16) -> Result<SmolStr, SentencePieceError> {
+        self.id_to_piece(tok as _)
     }
 
     /// Get the identifier of a sentence piece.

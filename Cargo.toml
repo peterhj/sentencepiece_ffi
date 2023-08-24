@@ -17,6 +17,7 @@ cmake = { path = "../cmake" }
 
 [dependencies]
 libc = { path = "../libc" }
+smol_str = { path = "../smol_str", default-features = false }
 
 #[features]
 #system = []
